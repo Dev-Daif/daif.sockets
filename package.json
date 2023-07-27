@@ -15,6 +15,7 @@
     "lint": "eslint ./src --ext .ts",
     "sockets:server": "node ./src/socketsServer.js",
     "test": "jest ./src --config jestconfig.json",
+    "test:watch": "jest ./src --config jestconfig.json --watch",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
@@ -42,6 +43,5 @@
   },
   "files": [
     "lib/**/*"
-  ],
-  "type": "module"
+  ]
 }
