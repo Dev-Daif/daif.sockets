@@ -2,6 +2,23 @@ import http from 'http'
 import { MODE, ServerWrapper } from '../../Wrappers/server'
 import { ListenOnAttachMode } from '../../Wrappers/errors/listenOnAttachMode'
 import { CloseOnAttachMode } from '../../Wrappers/errors/closeOnAttachMode'
+import { NotInitializedOnEvent } from '../../Wrappers/errors/notInitializedOnEvent'
+
+import { WebSocket } from 'ws'
+import { type WebSocket as WebSocketType } from 'ws'
+
+type StateKey = typeof WebSocket[keyof typeof WebSocket]
+const waitSocketConnection = async (socket: WebSocketType) => await new Promise<string>((resolve, reject) => {
+  socket.on('error', () => {
+    console.log('Error connection')
+    reject(new Error('Socket error'))
+  })
+
+  socket.on('open', () => {
+    console.log('Connected')
+    resolve('Connected')
+  })
+})
 
 describe('Server Wrapper', () => {
   describe('Server Handling [IF ONE OF THIS TESTS FAILS CAN CAUSE OTHERS TO FAIL]', () => {
@@ -20,6 +37,12 @@ describe('Server Wrapper', () => {
         await SocketServer.listen()
       })
 
+      test('Server must throw error if is initialized and you use ON("connection")', async () => {
+        expect(() => {
+          SocketServer.on('connection', () => { })
+        }).toThrow(NotInitializedOnEvent)
+      })
+
       test('must be created', async () => {
         expect(SocketServer.server).toBeInstanceOf(http.Server)
       })
@@ -36,9 +59,9 @@ describe('Server Wrapper', () => {
         await expect(SocketServer.close()).resolves.toMatch('closed')
       })
 
-      afterAll(() => {
+      afterAll(async () => {
         console.log('Closing Server')
-        void SocketServer.close()
+        await SocketServer.close()
       })
     })
 
@@ -76,6 +99,27 @@ describe('Server Wrapper', () => {
 
       afterAll(() => {
         httpServer.close()
+        SocketServer = new ServerWrapper()
+      })
+    })
+
+    describe('Handling Connections', () => {
+      beforeAll(async () => {
+        SocketServer = new ServerWrapper()
+        SocketServer.on('connection', () => {
+          console.log('Con handler')
+        })
+        await SocketServer.listen()
+      })
+
+      const socket = new WebSocket('ws://localhost:8080')
+      test('socket must be connected', async () => {
+        await expect(waitSocketConnection(socket)).resolves.toMatch('Connected')
+      })
+
+      afterAll(async () => {
+        socket.close()
+        await SocketServer.close()
       })
     })
   })
