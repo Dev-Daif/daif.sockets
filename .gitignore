@@ -3,3 +3,4 @@ pnpm-lock.*
 lib
 /lib/*
 node_modules
+src/testing.js
