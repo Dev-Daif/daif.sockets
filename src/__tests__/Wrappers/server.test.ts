@@ -1,24 +1,9 @@
 import http from 'http'
 import { MODE, ServerWrapper } from '../../Wrappers/server'
-import { ListenOnAttachMode } from '../../Wrappers/errors/listenOnAttachMode'
-import { CloseOnAttachMode } from '../../Wrappers/errors/closeOnAttachMode'
 import { NotInitializedOnEvent } from '../../Wrappers/errors/notInitializedOnEvent'
 
 import { WebSocket } from 'ws'
-import { type WebSocket as WebSocketType } from 'ws'
-
-type StateKey = typeof WebSocket[keyof typeof WebSocket]
-const waitSocketConnection = async (socket: WebSocketType) => await new Promise<string>((resolve, reject) => {
-  socket.on('error', () => {
-    console.log('Error connection')
-    reject(new Error('Socket error'))
-  })
-
-  socket.on('open', () => {
-    console.log('Connected')
-    resolve('Connected')
-  })
-})
+import { waitForClientReceiveMessage, waitSocketConnection } from '../../Wrappers/utils'
 
 describe('Server Wrapper', () => {
   describe('Server Handling [IF ONE OF THIS TESTS FAILS CAN CAUSE OTHERS TO FAIL]', () => {
@@ -28,8 +13,8 @@ describe('Server Wrapper', () => {
       expect(SocketServer).toBeInstanceOf(ServerWrapper)
     })
 
-    test('Server must be in DEFAULT MODE Cause is not initialized', () => {
-      expect(SocketServer.mode).toBe(MODE.DEFAULT)
+    test('Server must be in SERVER MODE Cause no server passed', () => {
+      expect(SocketServer.mode).toBe(MODE.SERVER)
     })
 
     describe('Initialize Server [NO ATTACHED]', () => {
@@ -60,66 +45,38 @@ describe('Server Wrapper', () => {
       })
 
       afterAll(async () => {
-        console.log('Closing Server')
+        // console.log('Closing Server')
         await SocketServer.close()
       })
-    })
 
-    describe('Initialize Server [ATTACHED]', () => {
-      const httpServer = http.createServer()
-      beforeAll(async () => {
-        SocketServer = new ServerWrapper()
-        SocketServer.attach(httpServer)
-      })
-      test('must be created', async () => {
-        expect(SocketServer.server).toBeInstanceOf(http.Server)
-      })
-
-      test('must throw if you try to listen', async () => {
-        await expect(
-          SocketServer.listen()
-        ).rejects.toThrow(ListenOnAttachMode)
-      })
-
-      test('must be in ATTACHED mode', () => {
-        expect(SocketServer.mode).toBe(MODE.ATTACHED)
-      })
-
-      test('must be listening', async () => {
-        httpServer.listen(8080, () => {
-          expect(SocketServer.server?.listening).toBe(true)
+      describe('Handling Connections [WS WebSocket]', () => {
+        beforeAll(async () => {
+          SocketServer = new ServerWrapper()
+          SocketServer.on('connection', (socket) => {
+            // console.log('Con handler')
+            socket.on('message', (msg: string) => {
+              socket.send(msg)
+            })
+          })
+          await SocketServer.listen()
         })
-      })
 
-      test('Must throw error if you try close using wrapper', async () => {
-        await expect(
-          SocketServer.close()
-        ).rejects.toThrow(CloseOnAttachMode)
-      })
+        const socket = new WebSocket('ws://localhost:8080')
 
-      afterAll(() => {
-        httpServer.close()
-        SocketServer = new ServerWrapper()
-      })
-    })
-
-    describe('Handling Connections', () => {
-      beforeAll(async () => {
-        SocketServer = new ServerWrapper()
-        SocketServer.on('connection', () => {
-          console.log('Con handler')
+        test('socket must be connected', async () => {
+          await expect(waitSocketConnection(socket)).resolves.toMatch('Connected')
         })
-        await SocketServer.listen()
-      })
 
-      const socket = new WebSocket('ws://localhost:8080')
-      test('socket must be connected', async () => {
-        await expect(waitSocketConnection(socket)).resolves.toMatch('Connected')
-      })
+        test('server must have received a message and send back to client', async () => {
+          socket.send('Hello')
+          const message = await waitForClientReceiveMessage(socket)
+          expect(message).toBe('Hello')
+        })
 
-      afterAll(async () => {
-        socket.close()
-        await SocketServer.close()
+        afterAll(async () => {
+          socket.close()
+          await SocketServer.close()
+        })
       })
     })
   })

@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
+    "@types/ws": "^8.5.5",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "eslint": "^8.0.1",
     "eslint-config-standard-with-typescript": "^37.0.0",
@@ -43,5 +44,8 @@
   },
   "files": [
     "lib/**/*"
-  ]
+  ],
+  "dependencies": {
+    "ws": "^8.13.0"
+  }
 }

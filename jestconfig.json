@@ -10,5 +10,8 @@
     "jsx",
     "json",
     "node"
+  ],
+  "modulePathIgnorePatterns": [
+    "./src/__tests__/test.utils.ts"
   ]
 }

@@ -14,28 +14,27 @@ export const MODE = {
   ATTACHED: 'ATTACHED'
 }
 
-interface Config {
-  port: number
-}
-
 // type of key
 export type ModeKey = typeof MODE[keyof typeof MODE]
 export type Events = 'connection'
 
 export class ServerWrapper {
-  #server?: http.Server
+  #server: http.Server = http.createServer()
   #mode: ModeKey = MODE.DEFAULT
-  #ws?: WebSocketServer
-  config: Config = {
-    port: 8080
-  }
-
-  #onCallback?: (...args: any) => void
+  #ws: WebSocketServer = new WebSocketServer({
+    server: this.#server
+  })
 
   constructor(options?: OPTIONS) {
-    if (options != null) {
-      const { server } = options
+    const { server } = options ?? {}
+    if (server == null) {
+      this.#mode = MODE.SERVER
+    } else {
+      this.#mode = MODE.ATTACHED
       this.#server = server
+      this.#ws = new WebSocketServer({
+        server
+      })
     }
   }
 
@@ -43,7 +42,7 @@ export class ServerWrapper {
     return this.#mode
   }
 
-  async listen(callback?: (...args: any) => void) {
+  async listen(port?: number, callback?: (...args: any) => void) {
     return await new Promise<ListenOnAttachMode | null>((resolve, reject) => {
       if (this.#mode === MODE.ATTACHED) {
         reject(
@@ -51,17 +50,13 @@ export class ServerWrapper {
         ); return
       }
 
-      if (this.#server == null) {
-        this.#mode = MODE.SERVER
-        this.#server = http.createServer()
-        this.#ws = new WebSocketServer({
-          server: this.#server
-        })
-      }
+      const PORT = port ?? 8080
 
-      this.#server.listen(this.config.port, () => {
+      this.#server.listen(PORT, () => {
         resolve(null)
+        console.log(`Running in server mode: ${this.#mode} on port: ${PORT}`)
 
+        /*
         this.#ws?.on('connection', (socket, req) => {
           console.log('New Connection')
           if (this.#onCallback != null) {
@@ -69,7 +64,7 @@ export class ServerWrapper {
             this.#onCallback(socket, { req })
           }
         })
-        console.log(`Running in server mode: ${this.#mode} on port: ${this.config.port}`)
+        */
         if (callback != null) {
           callback()
         }
@@ -78,10 +73,13 @@ export class ServerWrapper {
   }
 
   on(event: Events, callback: (socket: WebSocket, { req }: { req: http.IncomingMessage }) => void) {
-    if (this.#server?.listening === true) {
-      throw new NotInitializedOnEvent('You must listen on the server instance')
+    if (this.#server?.listening) {
+      throw new NotInitializedOnEvent('You are listening before adding on event')
     }
-    this.#onCallback = callback
+
+    this.#ws.on('connection', (socket, req) => {
+      callback(socket, { req })
+    })
   }
 
   async close() {
@@ -93,8 +91,10 @@ export class ServerWrapper {
       }
 
       if (this.#mode === MODE.SERVER) {
-        this.#server?.close(() => {
-          resolve('Server closed')
+        this.#server.close(() => {
+          this.#ws.close(() => {
+            resolve('Server closed')
+          })
         })
       }
     })
