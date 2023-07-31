@@ -1,5 +1,5 @@
 import type http from 'http'
-import { type WebSocket as WebSocketType } from 'ws'
+import { type RawData, type WebSocket as WebSocketType } from 'ws'
 export const waitSocketConnection = async (socket: WebSocketType) => await new Promise<string>((resolve, reject) => {
   const timeout = setTimeout(() => {
     reject(new Error('Socket connection timeout'))
@@ -22,8 +22,15 @@ export const waitForClientReceiveMessage = async (socket: WebSocketType) => {
     const timeout = setTimeout(() => {
       reject(new Error('Socket client receive message timeout'))
     }, 2000)
-    socket.on('message', (msg) => {
-      resolve(msg.toString())
+    socket.on('message', (msg: RawData) => {
+      // Compare if is buffer
+      let message = JSON.stringify(msg)
+      if (Buffer.isBuffer(msg)) {
+        const buf = Buffer.from(msg)
+        message = buf.toString('utf8')
+      }
+
+      resolve(message)
       clearTimeout(timeout)
     })
   })

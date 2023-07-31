@@ -1,13 +1,15 @@
 {
   "name": "daif.sockets",
   "version": "1.0.01",
-  "description": "Wrapper for handle websockets and add functionality",
+  "description": "Wrapper for handle websockets, Includes Room handling, reconnections, cloudflare worker client socket as server...",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "keywords": [
     "websocket",
     "sockets",
-    "wrapper"
+    "wrapper",
+    "websockets",
+    "realtime"
   ],
   "author": "Daif",
   "scripts": {
