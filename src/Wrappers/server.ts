@@ -73,14 +73,17 @@ export class ServerWrapper {
     })
   }
 
-  on(event: Events, callback: (socket: ClientWrapper, { req }: { req: http.IncomingMessage }) => void) {
+  on(event: Events, callback: (socket: ClientWrapper, { req, ...props }: { req: http.IncomingMessage, vanillaSocket: WebSocket }) => void) {
     if (this.#server?.listening) {
       throw new NotInitializedOnEvent('You are listening before adding on event')
     }
 
     this.#ws.on('connection', (socket, req) => {
       const client = new ClientWrapper(socket)
-      callback(client, { req })
+      callback(client, {
+        req,
+        vanillaSocket: socket
+      })
     })
   }
 

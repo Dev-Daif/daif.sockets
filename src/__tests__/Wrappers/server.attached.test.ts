@@ -50,10 +50,12 @@ describe('Server in mode [ATTACHED]', () => {
       server: httpServer
     })
     beforeAll(async () => {
-      SocketServer.on('connection', (socket) => {
+      SocketServer.on('connection', (socket, {
+        vanillaSocket
+      }) => {
         // console.log('Con handler')
-        socket.on('message', (msg: string) => {
-          socket.send(msg)
+        vanillaSocket.on('message', (msg: string) => {
+          vanillaSocket.send(msg)
         })
       })
       await waitForHttplisten(httpServer, PORT)

@@ -71,7 +71,11 @@ export class ClientWrapper {
       let messageParsed = JSON.parse(JSON.stringify(msg))
       if (Buffer.isBuffer(msg)) {
         const buf = Buffer.from(msg)
-        messageParsed = JSON.parse(buf.toString('utf8'))
+        try {
+          messageParsed = JSON.parse(buf.toString('utf8'))
+        } catch {
+          messageParsed = msg
+        }
       }
 
       const toEvent = messageParsed.event

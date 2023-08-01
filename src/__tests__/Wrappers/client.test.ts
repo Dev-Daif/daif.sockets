@@ -9,14 +9,14 @@ describe('Client Wrapper', () => {
     // Is used for test on / emit events
     server.on('connection', (socket) => {
       socket.on('message', (msg: string) => {
-        socket.send(msg)
+        socket.emit('message', msg)
       })
     })
-    await server.listen(8080)
+    await server.listen(8082)
   })
 
   describe('[With url passed]', () => {
-    const client = new ClientWrapper('ws://localhost:8080')
+    const client = new ClientWrapper('ws://localhost:8082')
 
     describe('Methods', () => {
       describe('.on', () => {
@@ -78,7 +78,7 @@ describe('Client Wrapper', () => {
   })
 
   describe('[With websocket instance passed]', () => {
-    const client = new ClientWrapper(new WebSocket('ws://localhost:8080'))
+    const client = new ClientWrapper(new WebSocket('ws://localhost:8082'))
 
     describe('Handling Connection, events', () => {
       test('must be connected', async () => {

@@ -52,10 +52,14 @@ describe('Server Wrapper', () => {
       describe('Handling Connections [WS WebSocket]', () => {
         beforeAll(async () => {
           SocketServer = new ServerWrapper()
-          SocketServer.on('connection', (socket) => {
+          SocketServer.on('connection', (socket, {
+            vanillaSocket
+          }) => {
             // console.log('Con handler')
-            socket.on('message', (msg: string) => {
-              socket.send(msg)
+            vanillaSocket.on('message', (msg: string) => {
+              // We are using vanilla socket so we dont use emit ClientWrapper method
+              // socket.emit('message', msg)
+              vanillaSocket.send(msg)
             })
           })
           await SocketServer.listen()
