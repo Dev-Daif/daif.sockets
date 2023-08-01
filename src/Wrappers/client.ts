@@ -4,17 +4,24 @@ import { SocketNotConnected } from './errors/socketNotConnected'
 export type CbOnMessage = (data: any) => void
 
 export class ClientWrapper {
-  readonly url: string
+  url: string = ''
   #socket?: WebSocket
-  constructor(url: string) {
-    this.url = url
-
+  constructor(client: string | WebSocket) {
+    // compare if is websocket
+    if (typeof client === 'string') {
+      this.url = client
+    } else {
+      this.#socket = client
+    }
     this.init()
   }
 
   private init() {
-    const socket = new WebSocket(this.url)
-    this.#socket = socket
+    let socket = this.#socket
+    if (socket == null) {
+      socket = new WebSocket(this.url)
+      this.#socket = socket
+    }
 
     socket.on('error', (err) => {
       console.error('Socket error', err)
