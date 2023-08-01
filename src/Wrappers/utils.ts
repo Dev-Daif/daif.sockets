@@ -1,5 +1,6 @@
 import type http from 'http'
 import { type RawData, type WebSocket as WebSocketType } from 'ws'
+import { type ClientWrapper } from './client'
 export const waitSocketConnection = async (socket: WebSocketType) => await new Promise<string>((resolve, reject) => {
   const timeout = setTimeout(() => {
     reject(new Error('Socket connection timeout'))
@@ -17,7 +18,7 @@ export const waitSocketConnection = async (socket: WebSocketType) => await new P
   })
 })
 
-export const waitForClientReceiveMessage = async (socket: WebSocketType) => {
+export const waitForClientReceiveMessage = async (socket: WebSocketType | ClientWrapper) => {
   return await new Promise<string>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error('Socket client receive message timeout'))
