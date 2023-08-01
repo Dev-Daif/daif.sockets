@@ -3,6 +3,7 @@ import http from 'http'
 import { ListenOnAttachMode } from './errors/listenOnAttachMode'
 import { CloseOnAttachMode } from './errors/closeOnAttachMode'
 import { NotInitializedOnEvent } from './errors/notInitializedOnEvent'
+import { ClientWrapper } from './client'
 interface OPTIONS {
   server?: http.Server
 }
@@ -72,13 +73,14 @@ export class ServerWrapper {
     })
   }
 
-  on(event: Events, callback: (socket: WebSocket, { req }: { req: http.IncomingMessage }) => void) {
+  on(event: Events, callback: (socket: ClientWrapper, { req }: { req: http.IncomingMessage }) => void) {
     if (this.#server?.listening) {
       throw new NotInitializedOnEvent('You are listening before adding on event')
     }
 
     this.#ws.on('connection', (socket, req) => {
-      callback(socket, { req })
+      const client = new ClientWrapper(socket)
+      callback(client, { req })
     })
   }
 
