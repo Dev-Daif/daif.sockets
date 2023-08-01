@@ -1,6 +1,6 @@
 {
   "name": "daif.sockets",
-  "version": "1.0.01",
+  "version": "1.0.11",
   "description": "Wrapper for handle websockets, Includes Room handling, reconnections, cloudflare worker client socket as server...",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -11,6 +11,13 @@
     "websockets",
     "realtime"
   ],
+  "homepage": "https://github.com/dev-daif/daif.sockets#readme",
+  "bugs": {
+    "url": "https://github.com/dev-daif/daif.sockets/issues"
+  },
+  "repository": {
+    "url": "https://github.com/dev-daif/daif.sockets"
+  },
   "author": "Daif",
   "scripts": {
     "build": "tsc",
