@@ -2,7 +2,7 @@
 
 ## Install
 
-```
+```bash
 npm install daif.sockets
 
 pnpm install daif.sockets
@@ -60,7 +60,7 @@ server.on('connection', (socket)=>{
 httpServer.listen(3000)
 ```
 
-**Note:** If you pass a `http` instance to the `ServerWrapper` constructor, you must call the `listen()` method on the instance.
+**Note:** If you pass an `http` instance to the `ServerWrapper` constructor, you must call the `listen()` method on the instance.
 
 ### Client Usage (Initialization)
 
